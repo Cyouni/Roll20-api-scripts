@@ -1358,6 +1358,20 @@ var CreatureGenPF = (function() {
 		addAbility(label,'',atkList,false,charId);
 	}; 
 	
+	var calcCritDamage = function(atkDamage, multi) {
+		var numDamage = atkDamage;
+		var toMult = parseInt(multi)-1; 
+		var numDice = numDamage.substring(numDamage.indexOf('[[')+2, numDamage.indexOf('d')).trim();
+		
+		var plusMinus = numDamage.indexOf('+') !== -1 ? numDamage.indexOf('+') : numDamage.indexOf('-');
+		var dieSize = numDamage.substring(numDamage.indexOf('d')+1, plusMinus).trim();
+		var bonus = numDamage.substring(plusMinus+1).trim();
+		
+		var result;
+		result = "[[" + (parseInt(numDice)*toMult) + "d" + dieSize + numDamage.charAt(plusMinus) + (parseInt(bonus)*toMult) + "]]"; 
+		return result;
+	};
+	
 	/**
 	 * Adds attacks
 	 */
@@ -1366,7 +1380,7 @@ var CreatureGenPF = (function() {
 			{return undefined;}
 		var attack, atkName, atkMod,
 			atkRiders, atkDamage, atkIter,
-			critRange, atkStr, dmgStr,
+			critRange, critDamage, atkStr, dmgStr,
 			abName, abLabel = '', iterCnt = 0, 
 			atkTitle;
 		
@@ -1407,6 +1421,7 @@ var CreatureGenPF = (function() {
 			
 			critRange =getCritRange(atkDamage);
 			atkDamage = formatDamage(atkDamage,specials);
+			critDamage = calcCritDamage(atkDamage.damage, critRange.multi); 
 			creLog('addAttacks: got damage for ' + attack,1); 
 			
 			// set up the template
@@ -1435,28 +1450,59 @@ var CreatureGenPF = (function() {
 					atkStr += "{{crit_confirm" + ((iterCnt > 1) ? iterCnt : "") + "=[[1d20" + atkIter[0] + "]]" 
 						+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
 						+ "}}";
-					atkStr += "{{crit_damage" + ((iterCnt > 1) ? iterCnt : "") + "=" + atkDamage.damage + "}}";	// ERROR crit_damage not taking critRange.multi into account
+					atkStr += "{{crit_damage" + ((iterCnt > 1) ? iterCnt : "") + "=" + critDamage + "}}";	// ERROR crit_damage not taking critRange.multi into account
 					
 					atkIter.shift();
 				}
 			} else {
-				atkStr += "{{attack" + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
-						+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
-						+ "}}";
-					// define damage	atkDamage = formatDamage(atkDamage,specials);
-				atkStr += "{{damage" + "=" + atkDamage.damage + "}}";
-				atkStr += "{{crit_confirm" + "=[[1d20" + atkIter[0] + "]]" 
-						+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
-						+ "}}";
-				atkStr += "{{crit_damage" + "=" + atkDamage.damage + "}}";
+				var numAttacks = parseInt(atkName); 
+				numAttacks = (!isNaN(numAttacks) ? numAttacks : 1); 
+				
+				for (var i = 0; i < numAttacks; ++i) {
+					atkStr += "{{attack" + ((i > 1) ? i : "") + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
+							+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
+							+ "}}";
+						// define damage	atkDamage = formatDamage(atkDamage,specials);
+					atkStr += "{{damage" + ((i > 1) ? i : "") + "=" + atkDamage.damage + "}}";
+					atkStr += "{{crit_confirm" + ((i > 1) ? i : "") + "=[[1d20" + atkIter[0] + "]]" 
+							+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
+							+ "}}";
+					atkStr += "{{crit_damage" + ((i > 1) ? i : "") + "=" + critDamage + "}}";
+				}
+				
+				// bonus attack for AOOs and whatnot
+				if (numAttacks > 1) {
+					var bonusAtkName = atkName.substring(atkName.indexOf(' '), atkName.length-1); 
+					var bonusAtkStr = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + bonusAtkName + "!" +
+						"\n" + fields.resultWhis + "&{template:pf_attack}"; 
+					if (type == "Melee") {
+						bonusAtkStr += "{{header_image=" + meleeImg + "}}";
+					} else if (type == "Ranged") {
+						bonusAtkStr += "{{header_image=" + rangedImg + "}}";
+					}
+					bonusAtkStr += "{{character_name=" + creName + "}} {{name=" + bonusAtkName + "}}";
+					bonusAtkStr += "{{attack" + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
+							+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
+							+ "}}";
+							
+					bonusAtkStr += "{{damage" + "=" + atkDamage.damage + "}}";
+					bonusAtkStr += "{{crit_confirm" + "=[[1d20" + atkIter[0] + "]]" 
+							+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
+							+ "}}";
+					bonusAtkStr += "{{crit_damage" + "=" + critDamage + "}}";
+					bonusAtkStr += (atkDamage.rider==="" ? '': atkDamage.rider);
+					
+					var bonusAbName = label + (volley ? ("["+volley+"]") : '') + "_" + bonusAtkName;
+					addAbility(bonusAbName,'',bonusAtkStr,false,charId);
+					abLabel += makeButton(bonusAtkName, bonusAtkName, bonusAbName);
+				}
 			}
-			atkStr += (atkDamage.rider==="" ? '': atkDamage.rider)
+			atkStr += (atkDamage.rider==="" ? '': atkDamage.rider);
 			
 			// set name and add ability
 			abName = label + (volley ? ("["+volley+"]") : '') + "_" + atkName;
 			
-			atkTitle += atkStr; 
-			addAbility(abName,'',atkTitle,false,charId);
+			addAbility(abName,'',atkTitle+atkStr,false,charId);
 			abLabel += makeButton(atkName, atkName, abName);
 			creLog('addAttacks: ' + attack + " atkname: '" + atkName + "' atkmod: '" + atkMod + "' atkDam: '"
 				+ atkDamage + "' atkRiders: '" + atkRiders + "'",1);
@@ -1500,7 +1546,7 @@ var CreatureGenPF = (function() {
 	 * Format the damage string and attach any riders if any. Be careful about
 	 * subrider semantics.
 	 */
-	var formatDamage = function(str, specials, multi) {
+	var formatDamage = function(str, specials) {
 		if (!str) 
 			{return {damage: "", rider: ""};}
 		var retval;
