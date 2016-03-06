@@ -1351,7 +1351,9 @@ var CreatureGenPF = (function() {
 				alphabet.shift();
 			}
 		} else {
+			log(attacks); 
 			attacks = str.split(/,(?![^\(\)]*\))/);
+			log(attacks); 
 			atkList += addAttacks(attacks,type,charId,label,specials);
 		}
 
@@ -1386,12 +1388,17 @@ var CreatureGenPF = (function() {
 		
 		creLog('addAttacks: ' + aryList + " " + label + " " + volley,1);
 			
-		for (var i = 0; i < aryList.length; ++i) {
+		log("numattacks: \'" + aryList.length + "\'");
+		for (var i = 0; i < aryList.length; i++) {
+			log("name: \'" + aryList[i] + "\'");
 			if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
+				log("cont");
 				continue;
 			}
 			attack = aryList[i].trim();
+			log("name: \'" + attack + "\'");
 			atkName = attack.match(/\b[^\d\(\)\+\/×]+(?=\+|\-)/);
+			log("name: \'" + atkName + "\'");
 			if (!atkName) {
 				/* if we don't have an attack name, we either don't have 
 					a modifier or there's a modifier with no name..*/
@@ -1458,16 +1465,16 @@ var CreatureGenPF = (function() {
 				var numAttacks = parseInt(atkName); 
 				numAttacks = (!isNaN(numAttacks) ? numAttacks : 1); 
 				
-				for (var i = 0; i < numAttacks; ++i) {
-					atkStr += "{{attack" + ((i > 1) ? i : "") + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
+				for (var j = 1; j <= numAttacks; j++) {
+					atkStr += "{{attack" + ((j > 1) ? j : "") + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
 							+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
 							+ "}}";
 						// define damage	atkDamage = formatDamage(atkDamage,specials);
-					atkStr += "{{damage" + ((i > 1) ? i : "") + "=" + atkDamage.damage + "}}";
-					atkStr += "{{crit_confirm" + ((i > 1) ? i : "") + "=[[1d20" + atkIter[0] + "]]" 
+					atkStr += "{{damage" + ((j > 1) ? j : "") + "=" + atkDamage.damage + "}}";
+					atkStr += "{{crit_confirm" + ((j > 1) ? j : "") + "=[[1d20" + atkIter[0] + "]]" 
 							+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
 							+ "}}";
-					atkStr += "{{crit_damage" + ((i > 1) ? i : "") + "=" + critDamage + "}}";
+					atkStr += "{{crit_damage" + ((j > 1) ? j : "") + "=" + critDamage + "}}";
 				}
 				
 				// bonus attack for AOOs and whatnot
