@@ -1,6 +1,6 @@
 var CreatureGenPF = (function() {
     'use strict'; 
-	var version = 1.00,
+	var version = 1.02,
 		author = "Ryan S.",
 		contributers = "Ken L., Andy W., Shu Zong C., Carlos R. L. Rodrigues",
 		debugLvl = 1,
@@ -61,7 +61,7 @@ var CreatureGenPF = (function() {
 		publicAnn: "/desc ",
 		privWhis: "/w GM ",
 		menuWhis: "/w GM ",
-		resultWhis: "", //"/w GM ",
+		resultWhis: "/w GM ",
 		urlTermGeneral: '[<<LABEL>>](http://www.google.com/cse?cx=006680642033474972217%3A6zo0hx_wle8&q=<<FULL>>)',
 		urlTermMonAbility: '[<<LABEL>>](http://paizo.com/pathfinderRPG/prd/additionalMonsters/universalMonsterRules.html#<<FULL>>)',
 		urlTermSpell: '[<<LABEL>>](http://archivesofnethys.com/SpellDisplay.aspx?ItemName=<<FULL>>)',
@@ -663,6 +663,7 @@ var CreatureGenPF = (function() {
 		creLog("parseGeneric: " + line,1);
 		if (line) {
 			line = line.replace(generic,"");
+			line = stripString(line, "*", ""); 
 			genAry = line.split(/,(?![^\(\)]*\))/);
 			if (genAry) {
 				_.every(genAry, function(elemGen) {
@@ -674,7 +675,7 @@ var CreatureGenPF = (function() {
 						genRiders = undefined;
 					}
 					genName = formatSuperSubScript(genName);
-					genList += "{{" + genName + "=" + getTermLink(genName, type) + "}}";
+					genList += "{{" + genName + "=" + getTermLink(genName, type) + genRiders + "}}";
 					return true; 
 				}); 
 				addAbility(generic,'',genList,false,charId);
@@ -783,7 +784,7 @@ var CreatureGenPF = (function() {
 			if (!value) 
 				{value = '—';}
 			value = value[0].trim();
-			return "{{" + label + "=" + value + riders + "}}";
+			return "{{" + label + "=" + value + ((riders) ? riders : "") + "}}";
 		};
 		var fmtTextFunc = function(arg) {
 			var riders = arg.match(/\(.+\)/);
@@ -1196,6 +1197,9 @@ var CreatureGenPF = (function() {
 						if (spells.length < 2)
 							{throw "ERROR: Bad spell list format";}
 						sLevel = spells[0];
+						sLevel = stripString(sLevel, "(", "- "); 
+						sLevel = stripString(sLevel, ")", ""); 
+						
 						spells = spells[1].split(/,(?![^\(\)]*\))/);
 						creLog("spells sl: " + sLevel + " sp: " + spells,2);
 						addSpells(casterLevel,sLevel,spells,termType,casterType,charId);
@@ -1229,7 +1233,7 @@ var CreatureGenPF = (function() {
 		var spellList = "";
 		
 		spellList = "!\n" + fields.menuWhis + "&{template:pf_block} {{header_image=" + spellImg + "}} {{character_name=" +
-			creName + "}} {{name=" + setName + "}} {{subtitle=" + spellLvl + " (CL" + casterLevel + ")}} {{=";
+			creName + "}} {{name=" + setName + "}} {{subtitle=" + spellLvl + " (CL" + casterLevel + ")}} {{" + spellAry[0].trim() + "=";
 		
 		while (spellAry.length > 0) {
 			if (!spellAry[0] || !spellAry[0].match(/[^\s]+/)) {
@@ -1254,13 +1258,26 @@ var CreatureGenPF = (function() {
 			
 			//d20pfsrd uses - rather than %20
 			//spellLabel = spellLabel.replace(/\s+/g,"-");
-			spellList += getTermLink(spellLabel,termType,spellName) + ", ";
+			spellList += getTermLink(spellLabel,termType,spellName);
+			if (spellAry.length > 1) spellList += ", ";
 			spellAry.shift();
 		}
 		spellList += "}}";
 		abName = setName + " " + spellLvl;
-		addAbility(abName,'',spellList,false,charId);
 		
+		// check to see if it exists before adding it, for weird dupes
+		var spellsFound = findObjs({
+			_type: "ability",
+			name: abName,
+		});
+		if (spellsFound.length > 0) {
+			var subtitleSearch = "{{subtitle=" + spellLvl + " (CL" + casterLevel + ")}}";
+			spellList = spellList.substring(spellList.indexOf(subtitleSearch) + subtitleSearch.length, spellList.length); 
+			spellsFound[0].set('action', spellsFound[0].get('action') + spellList);
+			log(spellsFound[0].get('action')); 
+		} else {
+			addAbility(abName,'',spellList,false,charId);
+		}
 	}; 
 	
 	/**
@@ -1351,9 +1368,7 @@ var CreatureGenPF = (function() {
 				alphabet.shift();
 			}
 		} else {
-			log(attacks); 
 			attacks = str.split(/,(?![^\(\)]*\))/);
-			log(attacks); 
 			atkList += addAttacks(attacks,type,charId,label,specials);
 		}
 
@@ -1388,17 +1403,13 @@ var CreatureGenPF = (function() {
 		
 		creLog('addAttacks: ' + aryList + " " + label + " " + volley,1);
 			
-		log("numattacks: \'" + aryList.length + "\'");
 		for (var i = 0; i < aryList.length; i++) {
-			log("name: \'" + aryList[i] + "\'");
 			if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 				log("cont");
 				continue;
 			}
 			attack = aryList[i].trim();
-			log("name: \'" + attack + "\'");
 			atkName = attack.match(/\b[^\d\(\)\+\/×]+(?=\+|\-)/);
-			log("name: \'" + atkName + "\'");
 			if (!atkName) {
 				/* if we don't have an attack name, we either don't have 
 					a modifier or there's a modifier with no name..*/
@@ -1433,7 +1444,7 @@ var CreatureGenPF = (function() {
 			
 			// set up the template
 			atkTitle = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + atkName + "!";
-			atkStr = "\n" + fields.resultWhis + "&{template:pf_attack}"; 
+			atkStr = "\n" + /*fields.resultWhis +*/ "&{template:pf_attack}"; 
 			if (type == "Melee") {
 				atkStr += "{{header_image=" + meleeImg + "}}";
 			} else if (type == "Ranged") {
@@ -1481,7 +1492,7 @@ var CreatureGenPF = (function() {
 				if (numAttacks > 1) {
 					var bonusAtkName = atkName.substring(atkName.indexOf(' '), atkName.length-1); 
 					var bonusAtkStr = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + bonusAtkName + "!" +
-						"\n" + fields.resultWhis + "&{template:pf_attack}"; 
+						"\n" + /*fields.resultWhis +*/ "&{template:pf_attack}"; 
 					if (type == "Melee") {
 						bonusAtkStr += "{{header_image=" + meleeImg + "}}";
 					} else if (type == "Ranged") {
@@ -1811,7 +1822,7 @@ var CreatureGenPF = (function() {
 				retval = getFormattedUrl(str,fields.urlTermGeneral,label);
 				break;
 			case termEnum.SPELL:
-				retval.capitalize(); 
+				str = str.capitalize(); 
 				retval = getFormattedUrl(str,fields.urlTermSpell,label);
 				break;
 			case termEnum.FEAT:
@@ -1891,6 +1902,7 @@ var CreatureGenPF = (function() {
 		var locEnd = str.length;
 		var num;
 		
+		return parseFloat(str); 
 		str = str.replace(/\s/g,"");
 		switch (type) {
 			case bonusEnum.SCALAR:
@@ -2223,7 +2235,7 @@ var CreatureGenPF = (function() {
 	var makeRoll = function(rollName, modifier, riders) {
 		creLog("making roll for " + rollName + " with +" + modifier);
 		return "&{template:pf_generic} {{header_image=" + genericImg + "}} {{character_name=" +
-			creName + "}} {{name=" + rollName + "}} {{Check=[[1d20" 
+			creName + "}} {{name=" + rollName + "}} {{Check=[[1d20+" 
 			+ modifier + (riders ? " "+riders:"") + "]]}}";
 	}
 	
