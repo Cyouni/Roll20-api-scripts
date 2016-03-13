@@ -563,7 +563,7 @@ var CreatureGenPF = (function() {
 	
 	// used to quickly apply block template
 	var applyBlockTemplate = function(title) {
-		return "!\n" + fields.menuWhis + "&{template:pf_block} {{header_image=" + blockImg + "}} {{character_name=" +
+		return fields.menuWhis + "&{template:pf_block} {{header_image=" + blockImg + "}} {{character_name=" +
 			creName + "}} {{subtitle=" + title + "}}";
 	};
 	
@@ -675,7 +675,7 @@ var CreatureGenPF = (function() {
 						genRiders = undefined;
 					}
 					genName = formatSuperSubScript(genName);
-					genList += "{{" + genName + "=" + getTermLink(genName, type) + genRiders + "}}";
+					genList += "{{" + genName + "=" + getTermLink(genName, type) + " " + genRiders + "}}";
 					return true; 
 				}); 
 				addAbility(generic,'',genList,false,charId);
@@ -1258,7 +1258,7 @@ var CreatureGenPF = (function() {
 			
 			//d20pfsrd uses - rather than %20
 			//spellLabel = spellLabel.replace(/\s+/g,"-");
-			spellList += getTermLink(spellLabel,termType,spellName);
+			spellList += getTermLink(spellLabel,termType,spellName) + " " + spellRiders;
 			if (spellAry.length > 1) spellList += ", ";
 			spellAry.shift();
 		}
@@ -2229,7 +2229,7 @@ var CreatureGenPF = (function() {
 	
 	var makeButton = function(tag, buttonName, abName) {
 		creLog("making button for " + buttonName + " with " + abName);
-		return "{{" + tag + "=[" + buttonName + "](!&#37;&#123;" + creName + "&#124;" + abName + "&#125;)}}";
+		return "{{" + tag + "=[" + buttonName + "](!&#13;&#37;&#123;" + creName + "&#124;" + abName + "&#125;)}}";
 	}
 	
 	var makeRoll = function(rollName, modifier, riders) {
