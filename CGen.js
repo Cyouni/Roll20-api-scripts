@@ -325,8 +325,8 @@ var CreatureGenPF = (function() {
 		if ((delimiter_idx <= 0) || !(fuzzyfield.match(/\d+|—/g)))
 			{delimiter_idx = namefield.length;}
 		var name = namefield.substring(0,delimiter_idx);
-		name = name.trim().toLowerCase();
-		name = name.capitalize(); 
+		name = name.trim().toLowerCase().capitalize(); 
+		if (name.indexOf("(") != -1) name = name.substring(0, name.indexOf("(")-1);
 		
 		creName = (fields.summoner ? (fields.summoner.get('_displayname')+'\'s ' + name):name);
 		fields.publicName = creName; //(fields.summoner ? creName:fields.publicName);  // ERROR, removed due to screw this
@@ -675,7 +675,7 @@ var CreatureGenPF = (function() {
 						genRiders = undefined;
 					}
 					genName = formatSuperSubScript(genName);
-					genList += "{{" + genName + "=" + getTermLink(genName, type) + " " + genRiders + "}}";
+					genList += "{{" + genName + "=" + getTermLink(genName, type) + (genRiders ? " " + genRiders : "") + "}}";
 					return true; 
 				}); 
 				addAbility(generic,'',genList,false,charId);
@@ -784,7 +784,7 @@ var CreatureGenPF = (function() {
 			if (!value) 
 				{value = '—';}
 			value = value[0].trim();
-			return "{{" + label + "=" + value + ((riders) ? riders : "") + "}}";
+			return "{{" + label + "=" + value + ((riders) ? " " + riders : "") + "}}";
 		};
 		var fmtTextFunc = function(arg) {
 			var riders = arg.match(/\(.+\)/);
@@ -792,7 +792,7 @@ var CreatureGenPF = (function() {
 			if (!value) 
 				{value = '—';}
 			value = value[0].trim();
-			return value+riders; 
+			return value+ ((riders) ? " " + riders : ""); 
 		};
 		
 		defenseList = "!\n" + fields.menuWhis + "&{template:pf_generic} {{header_image=" + defenseImg + "}} {{character_name=" +
@@ -868,7 +868,8 @@ var CreatureGenPF = (function() {
 					if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 					 continue;
 					}
-					defenseList += fmtTextFunc(aryList[i]) + ", ";
+					defenseList += fmtTextFunc(aryList[i]);
+					if (i != aryList.length - 1) defenseList += ", "; 
 				}
 			}
 			defenseList += "}}";		
@@ -883,7 +884,8 @@ var CreatureGenPF = (function() {
 					if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 					 continue;
 					}
-					defenseList += fmtLinkFunc(aryList[i]) + ", ";
+					defenseList += fmtLinkFunc(aryList[i]);
+					if (i != aryList.length - 1) defenseList += ", "; 
 				}
 			}
 			defenseList += "}}";
@@ -898,7 +900,8 @@ var CreatureGenPF = (function() {
 					if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 					 continue;
 					}
-					defenseList += fmtLinkFunc(aryList[i]) + ", ";
+					defenseList += fmtLinkFunc(aryList[i]);
+					if (i != aryList.length - 1) defenseList += ", "; 
 				}
 			}
 			defenseList += "}}";
@@ -913,7 +916,8 @@ var CreatureGenPF = (function() {
 					if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 					 continue;
 					}
-					defenseList += fmtLinkFunc(aryList[i]) + ", ";
+					defenseList += fmtLinkFunc(aryList[i]);
+					if (i != aryList.length - 1) defenseList += ", "; 
 				}
 			}
 			defenseList += "}}";
@@ -928,7 +932,8 @@ var CreatureGenPF = (function() {
 					if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 					 continue;
 					}
-					defenseList += fmtLinkFunc(aryList[i]) + ", ";
+					defenseList += fmtLinkFunc(aryList[i]);
+					if (i != aryList.length - 1) defenseList += ", "; 
 				}
 			}
 			defenseList += "}}";
@@ -943,7 +948,8 @@ var CreatureGenPF = (function() {
 					if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 					 continue;
 					}
-					defenseList += fmtLinkFunc(aryList[i]) + ", ";
+					defenseList += fmtLinkFunc(aryList[i]);
+					if (i != aryList.length - 1) defenseList += ", "; 
 				}
 			}
 			defenseList += "}}";
@@ -958,7 +964,8 @@ var CreatureGenPF = (function() {
 					if (!aryList[i] || !aryList[i].match(/[^\s]+/)) {
 					 continue;
 					}
-					defenseList += fmtLinkFunc(aryList[i]) + ", ";
+					defenseList += fmtLinkFunc(aryList[i]);
+					if (i != aryList.length - 1) defenseList += ", "; 
 				}
 			}
 			defenseList += "}}";
@@ -1258,7 +1265,7 @@ var CreatureGenPF = (function() {
 			
 			//d20pfsrd uses - rather than %20
 			//spellLabel = spellLabel.replace(/\s+/g,"-");
-			spellList += getTermLink(spellLabel,termType,spellName) + " " + spellRiders;
+			spellList += getTermLink(spellLabel,termType,spellName) + (spellRiders ? " " + spellRiders : "");
 			if (spellAry.length > 1) spellList += ", ";
 			spellAry.shift();
 		}
@@ -1274,7 +1281,6 @@ var CreatureGenPF = (function() {
 			var subtitleSearch = "{{subtitle=" + spellLvl + " (CL" + casterLevel + ")}}";
 			spellList = spellList.substring(spellList.indexOf(subtitleSearch) + subtitleSearch.length, spellList.length); 
 			spellsFound[0].set('action', spellsFound[0].get('action') + spellList);
-			log(spellsFound[0].get('action')); 
 		} else {
 			addAbility(abName,'',spellList,false,charId);
 		}
@@ -1459,16 +1465,16 @@ var CreatureGenPF = (function() {
 				while(atkIter.length > 0) {
 					++iterCnt;
 
-					// critRange.range, critRange.multi		ERROR
-					atkStr += "{{attack" + ((iterCnt > 1) ? iterCnt : "") + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
+					// critRange.range, critRange.multi		
+					atkStr += "{{attack" + ((iterCnt != 1) ? iterCnt : "") + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
 						+ (!atkRiders ? '' : ( " " + atkRiders[0].trim()))
 						+ "}}";
 					// define damage	atkDamage = formatDamage(atkDamage,specials);
-					atkStr += "{{damage" + ((iterCnt > 1) ? iterCnt : "") + "=" + atkDamage.damage + "}}";
-					atkStr += "{{crit_confirm" + ((iterCnt > 1) ? iterCnt : "") + "=[[1d20" + atkIter[0] + "]]" 
+					atkStr += "{{damage" + ((iterCnt != 1) ? iterCnt : "") + "=" + atkDamage.damage + "}}";
+					atkStr += "{{crit_confirm" + ((iterCnt != 1) ? iterCnt : "") + "=[[1d20" + atkIter[0] + "]]" 
 						+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
 						+ "}}";
-					atkStr += "{{crit_damage" + ((iterCnt > 1) ? iterCnt : "") + "=" + critDamage + "}}";	// ERROR crit_damage not taking critRange.multi into account
+					atkStr += "{{crit_damage" + ((iterCnt != 1) ? iterCnt : "") + "=" + critDamage + "}}";
 					
 					atkIter.shift();
 				}
@@ -1901,19 +1907,18 @@ var CreatureGenPF = (function() {
 		var locStart = 0;
 		var locEnd = str.length;
 		var num;
-		
-		return parseFloat(str); 
+	
 		str = str.replace(/\s/g,"");
 		switch (type) {
 			case bonusEnum.SCALAR:
-				num = str.match(/\d+/);
+				num = str.match(/\d+([\/.]\d+)?/g);
 				if (num)
-					{retval = num[0];}
+					{retval = parseFloat(num[0]);}
 				else
 					{retval = "0";}
 				break;
 			case bonusEnum.SIGN:
-				num = str.match(/\+*\-*\d+/);
+				num = str.match(/\+*\-*\d+([\/.]\d+)?/g);
 				if (num) {
 					if (!num[0].match(/\+|\-/))
 						{retval = "+" + num[0];}
@@ -1926,6 +1931,7 @@ var CreatureGenPF = (function() {
 				// impossible
 				return undefined;
 		}
+		
 		return retval;
 	}; 
 	
@@ -2235,7 +2241,7 @@ var CreatureGenPF = (function() {
 	var makeRoll = function(rollName, modifier, riders) {
 		creLog("making roll for " + rollName + " with +" + modifier);
 		return "&{template:pf_generic} {{header_image=" + genericImg + "}} {{character_name=" +
-			creName + "}} {{name=" + rollName + "}} {{Check=[[1d20+" 
+			creName + "}} {{name=" + rollName + "}} {{Check=[[1d20" 
 			+ modifier + (riders ? " "+riders:"") + "]]}}";
 	}
 	
