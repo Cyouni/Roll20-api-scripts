@@ -3,39 +3,85 @@ var BuffToggler = (function() {
 	var version = 1.00,
 		author = "Ryan S.",
 		cmdName = "!BuffToggle",
-		playerSending
+		playerSending;
 		
+	function getCharacterObj(obj) {
+		//send any object and returns the associated character object
+		//returns character object for attribute, token/graphic, and ability, and... character
+
+		var objType = obj._type,
+			att, characterObj, tok;
+
+		if ((objType !== "attribute") && (objType !== "graphic") && (objType !== "character")) {
+			sendChat("API"," cannot be associated with a character.");
+			return;
+		} 
+
+		if ((objType === "attribute") || (objType === "ability")) {
+			att = getObj(objType, obj._id);
+			if (att.get("_characterid") !== "") {
+				characterObj = getObj("character", att.get("_characterid"));
+			}
+		}
+
+		if (objType === "graphic") { 
+			tok = getObj("graphic", obj._id);
+			if (tok.get("represents") !== "") {
+				characterObj = getObj("character", tok.get("represents"));
+			} else {
+				sendChat("API"," Selected token does not represent a character.");
+				return;
+			}
+		}
+
+		if (objType === "character") {
+			characterObj = getObj("character", obj._id);
+		}
+
+		return characterObj;
+	}
+	
 	function sendFeedback(msg) {
-		sendChat("BuffToggler", "/w gm " + msg); 
+		sendChat("BuffToggler", "/w " + playerSending + " " + msg); 
 	}
 	
 	function handleBuff(msg) {	
+		// calculate buff number
 		var args = msg.content.replace(cmdName,'').trim().toLowerCase();	
-		
-		sendFeedback("\'" + args + "\' parsing.");
 		var buffNum = parseInt(args); 
 		
-		sendFeedback(buffNum + " found.");
+		var tok, characterObj, characterID, characterName;
+		
 		if (!isNaN(buffNum)) {
 			if (buffNum > 10 || buffNum < 1) {
 				sendFeedback("Buff number " + buffNum + " out of range.");
 			}
-			var buffName = "@{buff" + buffNum + "_Toggle}";
 						
 			// toggle buff
 			_.each(msg.selected, function(obj) {
-				if(obj._type != "graphic") return;
-				var token = getObj("graphic", obj._id);
-				var character = getObj("character", token.get("represents"));
+				tok = getObj("graphic", obj._id);
+				// Get the character token represents
+				characterObj = getCharacterObj(obj);
+				if ( ! characterObj) {
+					return;
+				}
+				characterID = characterObj.get("_id");
+				characterName = characterObj.get("name");
 				
-				sendFeedback(character.name + " found.");
-				// toggle buff
-				var buffToggle = findObjs({
-					name: buffName,
-					_type: "attribute", 
-					_characterid: character.id}, {caseInsensitive: true})[0];
-				buffToggle = !buffToggle; 
-				sendFeedback("Buff " + buffNum + " toggled.");
+				var buffNames = filterObjs(function(obj) {    
+				  if(obj.get("_type") === 'attribute' && obj.get("_characterid") === characterID && obj.get("name").match(/repeating_buff_[^_]+_buff-name/)) return true;    
+				  else return false;
+				});
+				var buffList = filterObjs(function(obj) {    
+				  if(obj.get("_type") === 'attribute' && obj.get("_characterid") === characterID && obj.get("name").match(/repeating_buff_[^_]+_buff-enable_toggle/)) return true;    
+				  else return false;
+				});
+				var buffName = buffNames[buffNum].get('current'); 
+				var buffToggle = buffList[buffNum]; 
+										
+				if (buffToggle.get("current") == 0) buffToggle.set("current", 1); 
+				else buffToggle.set("current", 0);
+				sendFeedback(buffName + " toggled to " + Boolean(buffToggle.get("current")) + ".");
 			});	
 		}
 	}		
@@ -62,30 +108,12 @@ var BuffToggler = (function() {
 		}
 	}; 
 	
-	/**
-	 * Handle new graphics added
-	 */
-	var handleAddGraphic = function(obj) {
-		var type;
-		var charSheet;
-		var charId;
-		if (!!(type=obj.get('_subtype'))) {
-		   if (type === 'token') {
-				charSheet = obj.get('represents');
-				if (charSheet) {
-					character = getObj("character", charSheet);
-				}
-			}
-		}
-	}; 
-	
 	return {
 		/**
 		 * Register Roll20 handlers
 		 */
 		registerAPI : function() {
 			on('chat:message',handleChatMessage);
-			on('add:graphic',handleAddGraphic);
 		},
 
 		init: function() {
