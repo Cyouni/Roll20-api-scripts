@@ -1173,7 +1173,7 @@ var CreatureGenPF = (function() {
 					{casterType = "Base";}
 				casterType += (suffix ? ("-"+suffix) : "");
 				casterLevel = getValueByName("CL",line,termChars);
-				casterLevel = getBonusNumber(casterLevel,bonusEnum.SCALAR);
+				casterLevel = "+" + getBonusNumber(casterLevel,bonusEnum.SCALAR);
 				creLog("SpellFormat: casterType: " + casterType,2);
 				clAttrName = casterType + "-CL";
 				addAttribute(clAttrName,casterLevel,casterLevel,charId);
@@ -1276,8 +1276,9 @@ var CreatureGenPF = (function() {
 		var spellsFound = findObjs({
 			_type: "ability",
 			name: abName,
+			_characterid: charId
 		});
-		if (spellsFound.length > 0) {
+		if (spellsFound.length > 0) { 
 			var subtitleSearch = "{{subtitle=" + spellLvl + " (CL" + casterLevel + ")}}";
 			spellList = spellList.substring(spellList.indexOf(subtitleSearch) + subtitleSearch.length, spellList.length); 
 			spellsFound[0].set('action', spellsFound[0].get('action') + spellList);
@@ -1385,13 +1386,23 @@ var CreatureGenPF = (function() {
 		var numDamage = atkDamage;
 		var toMult = parseInt(multi)-1; 
 		var numDice = numDamage.substring(numDamage.indexOf('[[')+2, numDamage.indexOf('d')).trim();
+		var isPlus = '+';
 		
 		var plusMinus = numDamage.indexOf('+') !== -1 ? numDamage.indexOf('+') : numDamage.indexOf('-');
+		
+		var bonus; 
+		if (plusMinus === -1) {
+			plusMinus = numDamage.indexOf(']]'); 
+			bonus = 0;
+		} else {
+			isPlus = numDamage.charAt(plusMinus);
+			bonus = numDamage.substring(plusMinus+1, numDamage.indexOf(']]')).trim();
+		}
 		var dieSize = numDamage.substring(numDamage.indexOf('d')+1, plusMinus).trim();
-		var bonus = numDamage.substring(plusMinus+1).trim();
+		
 		
 		var result;
-		result = "[[" + (parseInt(numDice)*toMult) + "d" + dieSize + numDamage.charAt(plusMinus) + (parseInt(bonus)*toMult) + "]]"; 
+		result = "[[" + (parseInt(numDice)*toMult) + "d" + dieSize + isPlus + (parseInt(bonus)*toMult) + "]]"; 
 		return result;
 	};
 	
@@ -1480,7 +1491,7 @@ var CreatureGenPF = (function() {
 				}
 			} else {
 				var numAttacks = parseInt(atkName); 
-				numAttacks = (!isNaN(numAttacks) ? numAttacks : 1); 
+				numAttacks = ((!isNaN(numAttacks) && atkName[0] != '+') ? numAttacks : 1); 
 				
 				for (var j = 1; j <= numAttacks; j++) {
 					atkStr += "{{attack" + ((j > 1) ? j : "") + "=[[1d20"+(critRange.range<20 ? ("cs>"+critRange.range) : '') + atkIter[0] + "]]" 
@@ -1491,12 +1502,12 @@ var CreatureGenPF = (function() {
 					atkStr += "{{crit_confirm" + ((j > 1) ? j : "") + "=[[1d20" + atkIter[0] + "]]" 
 							+ (!atkRiders ? '' : ( " "+atkRiders[0].trim()))
 							+ "}}";
-					atkStr += "{{crit_damage" + ((j > 1) ? j : "") + "=" + critDamage + "}}";
+					atkStr += "{{crit_damage" + ((j > 1) ? j : "") + "=" + critDamage + " }}";
 				}
 				
 				// bonus attack for AOOs and whatnot
 				if (numAttacks > 1) {
-					var bonusAtkName = atkName.substring(atkName.indexOf(' '), atkName.length-1); 
+					var bonusAtkName = atkName.substring(atkName.indexOf(' ')+1, atkName.length-1); 
 					var bonusAtkStr = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + bonusAtkName + "!" +
 						"\n" + /*fields.resultWhis +*/ "&{template:pf_attack}"; 
 					if (type == "Melee") {
