@@ -1417,6 +1417,7 @@ var CreatureGenPF = (function() {
 			critRange, critDamage, atkStr, dmgStr,
 			abName, abLabel = '', iterCnt = 0, 
 			atkTitle;
+		var codeName;
 		
 		creLog('addAttacks: ' + aryList + " " + label + " " + volley,1);
 			
@@ -1527,18 +1528,20 @@ var CreatureGenPF = (function() {
 					bonusAtkStr += "{{crit_damage" + "=" + critDamage + "}}";
 					bonusAtkStr += (atkDamage.rider==="" ? '': atkDamage.rider);
 					
-					var bonusAbName = label + (volley ? ("["+volley+"]") : '') + "_" + bonusAtkName;
+					var bonusCodeName = label + (volley ? ("&#40;"+volley+"&#41;") : '') + "_" + bonusAtkName;
+					var bonusAbName = label + (volley ? ("("+volley+")") : '') + "_" + bonusAtkName;
 					addAbility(bonusAbName,'',bonusAtkStr,false,charId);
-					abLabel += makeButton(bonusAtkName, bonusAtkName, bonusAbName);
+					abLabel += makeButton(bonusAtkName + (volley ? volley : ''), bonusAbName, bonusCodeName);
 				}
 			}
 			atkStr += (atkDamage.rider==="" ? '': atkDamage.rider);
 			
 			// set name and add ability
-			abName = label + (volley ? ("["+volley+"]") : '') + "_" + atkName;
+			codeName = label + (volley ? ("&#40;"+volley+"&#41;") : '') + "_" + atkName;
+			abName = label + (volley ? ("("+volley+")") : '') + "_" + atkName;
 			
 			addAbility(abName,'',atkTitle+atkStr,false,charId);
-			abLabel += makeButton(atkName, atkName, abName);
+			abLabel += makeButton(atkName + (volley ? volley : ''), abName, codeName);
 			creLog('addAttacks: ' + attack + " atkname: '" + atkName + "' atkmod: '" + atkMod + "' atkDam: '"
 				+ atkDamage + "' atkRiders: '" + atkRiders + "'",1);
 		}
