@@ -295,6 +295,7 @@ var CreatureGenPF = (function() {
 			case 'Fine':
 			case 'Diminutive': 
 			case 'Tiny': 
+				unitSize = 0.5;
 			case 'Small':
 			case 'Medium':
 				  break; 
