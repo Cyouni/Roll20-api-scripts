@@ -62,6 +62,7 @@ var CreatureGenPF = (function() {
 		privWhis: "/w GM ",
 		menuWhis: "/w GM ",
 		resultWhis: "/w GM ",
+		attackWhis: "",
 		urlTermGeneral: '[<<LABEL>>](http://www.google.com/cse?cx=006680642033474972217%3A6zo0hx_wle8&q=<<FULL>>)',
 		urlTermMonAbility: '[<<LABEL>>](http://paizo.com/pathfinderRPG/prd/additionalMonsters/universalMonsterRules.html#<<FULL>>)',
 		urlTermSpell: '[<<LABEL>>](http://archivesofnethys.com/SpellDisplay.aspx?ItemName=<<FULL>>)',
@@ -366,7 +367,12 @@ var CreatureGenPF = (function() {
 		// Init (TODO mythic Init)
 		line = getLineByName(initAttr,data);
 		rc = getValueByName(initAttr,line,termChars);
-		rc += ".0" + rc.substring(2);
+		var tempInit = rc.substring(2);
+		if (tempInit.length > 1)
+			rc += "." + tempInit;
+		else 
+			rc += ".0" + tempInit;
+		
 		addAttribute(initAttr,rc,rc,charId);	  
 		// prime attributes
 		lineStartFnd = getLineNumberByName("STATISTICS",data);
@@ -727,7 +733,7 @@ var CreatureGenPF = (function() {
 					abName = stripString(abName, "(", ''); // strip brackets and spaces out
 					abName = stripString(abName, ")", ''); // strip brackets and spaces out
 					abName = stripString(abName, " ", ''); // strip brackets and spaces out
-					abStr = "!\n"+makeRoll(skillName, rc, skillRiders); 
+					abStr = "!\n" +fields.resultWhis + makeRoll(skillName, rc, skillRiders); 
 					addAbility(abName,'',abStr,false,charId);
 					skillList += makeButton(abName, skillName, abName);
 					return true; 
@@ -739,7 +745,7 @@ var CreatureGenPF = (function() {
 				rc = getValueByName('Perception',line,termChars);
 				rc = getBonusNumber(rc,bonusEnum.SIGN);
 				abName = "SK-Perception";
-				abStr = makeRoll("Perception", rc, skillRiders); 
+				abStr = fields.resultWhis + makeRoll("Perception", rc, skillRiders); 
 				addAbility(abName,'',abStr,false,charId);
 				skillList += makeButton(skillName, "Perception", abName);
 			}
@@ -1462,7 +1468,7 @@ var CreatureGenPF = (function() {
 			
 			// set up the template
 			atkTitle = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + atkName + "!";
-			atkStr = "\n" + /*fields.resultWhis +*/ "&{template:pf_attack}"; 
+			atkStr = "\n" + fields.attackWhis + "&{template:pf_attack}"; 
 			if (type == "Melee") {
 				atkStr += "{{header_image=" + meleeImg + "}}";
 			} else if (type == "Ranged") {
@@ -1510,7 +1516,7 @@ var CreatureGenPF = (function() {
 				if (numAttacks > 1) {
 					var bonusAtkName = atkName.substring(atkName.indexOf(' ')+1, atkName.length-1); 
 					var bonusAtkStr = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + bonusAtkName + "!" +
-						"\n" + /*fields.resultWhis +*/ "&{template:pf_attack}"; 
+						"\n" + fields.attackWhis + "&{template:pf_attack}"; 
 					if (type == "Melee") {
 						bonusAtkStr += "{{header_image=" + meleeImg + "}}";
 					} else if (type == "Ranged") {
@@ -2770,6 +2776,9 @@ var CreatureGenPF = (function() {
 				} else if (args.indexOf('-name') === 0) {
 					args = args.replace('-name','').trim();
 					doNameGenesis(msg,args);
+				} else if (args.indexOf('-hideattacks') === 0) {
+					fields.attackWhis = "/w GM ";
+					doGenesis(msg);
 				} else {
 					sendFeedback("Unknown CreatureGen command '"+args+"'");
 					showHelp();
@@ -2779,6 +2788,7 @@ var CreatureGenPF = (function() {
 				sendFeedback('<span style="color: #FF8D0B; font-weight: bold;">'
 					+ ' BUSY </span>');
 			} else {
+				fields.attackWhis = "";
 				doGenesis(msg);
 			}
 		}
