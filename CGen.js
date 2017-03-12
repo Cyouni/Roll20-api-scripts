@@ -846,6 +846,9 @@
 			line = getLineByName("Speed",data,lineStartFnd,lineEndFnd);
 			if (line) {speed = getValueByName("Speed",line,termChars);}
 			
+			defenseList += fmtLeadFunc('Touch%%'+findObjs({_type: "attribute", _characterid: character.get('_id'), name: "touch"})[0].get("max"));
+			defenseList += fmtLeadFunc('FF%%'+findObjs({_type: "attribute", _characterid: character.get('_id'), name: "flat-footed"})[0].get("max"));
+			
 			if (CMD) {
 				hasDefense = true;
 				defenseList += fmtLeadFunc('CMD%%'+CMD);
@@ -1476,7 +1479,6 @@
 					atkStr += "{{header_image=" + meleeImg + "}}";
 				} else if (type == "Ranged") {
 					atkStr += "{{header_image=" + rangedImg + "}}";
-					
 				}
 				atkStr += "{{character_name=" + creName + "}} {{name=" + atkName + "}}";	
 				
@@ -1517,7 +1519,7 @@
 					
 					// bonus attack for AOOs and whatnot
 					if (numAttacks > 1) {
-						var bonusAtkName = atkName.substring(atkName.indexOf(' ')+1, atkName[atkName.length-1] == 's' ? atkName.length-1 : atkName.length); 
+						var bonusAtkName = "(AOO" + (volley ? '_'+volley : '') + ")_" + atkName.substring(atkName.indexOf(' ')+1, atkName[atkName.length-1] == 's' ? atkName.length-1 : atkName.length); 
 						var bonusAtkStr = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + bonusAtkName + "!" +
 							"\n" + fields.attackWhis + "&{template:pf_attack}"; 
 						if (type == "Melee") {
@@ -1538,7 +1540,7 @@
 						bonusAtkStr += (atkDamage.rider==="" ? '': atkDamage.rider);
 						
 						var bonusCodeName = label + (volley ? ("&#40;"+volley+"&#41;") : '') + "_" + bonusAtkName;
-						var bonusAbName = label + (volley ? ("("+volley+")") : '') + "_" + bonusAtkName;
+						var bonusAbName = label + bonusAtkName;
 						addAbility(bonusAbName,'',bonusAtkStr,false,charId);
 						abLabel += makeButton(bonusAtkName + (volley ? volley : ''), bonusAbName, bonusCodeName);
 					}
