@@ -1519,7 +1519,7 @@
 					
 					// bonus attack for AOOs and whatnot
 					if (numAttacks > 1) {
-						var bonusAtkName = "(AOO" + (volley ? '_'+volley : '') + ")_" + atkName.substring(atkName.indexOf(' ')+1, atkName[atkName.length-1] == 's' ? atkName.length-1 : atkName.length); 
+						var bonusAtkName = atkName.substring(atkName.indexOf(' ')+1, atkName[atkName.length-1] == 's' ? atkName.length-1 : atkName.length); 
 						var bonusAtkStr = "!\n" + fields.publicAnn + fields.publicName + " attacks with " + bonusAtkName + "!" +
 							"\n" + fields.attackWhis + "&{template:pf_attack}"; 
 						if (type == "Melee") {
@@ -1539,8 +1539,8 @@
 						bonusAtkStr += "{{crit_damage" + "=" + critDamage + "}}";
 						bonusAtkStr += (atkDamage.rider==="" ? '': atkDamage.rider);
 						
-						var bonusCodeName = label + (volley ? ("&#40;"+volley+"&#41;") : '') + "_" + bonusAtkName;
-						var bonusAbName = label + bonusAtkName;
+						var bonusCodeName = label + "_AOO" + (volley ? ("&#40;"+volley+"&#41;") : '') + "_" + bonusAtkName;
+						var bonusAbName = label + "_AOO" + (volley ? '_'+volley : '') + "_" + bonusAtkName;
 						addAbility(bonusAbName,'',bonusAtkStr,false,charId);
 						abLabel += makeButton(bonusAtkName + (volley ? volley : ''), bonusAbName, bonusCodeName);
 					}
