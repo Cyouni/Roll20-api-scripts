@@ -112,7 +112,7 @@
 			creLog('RAW: ' + rawData);
 			if (!rawData) 
 				{throw "no token notes";}
-			data = rawData.split(/%3Cbr%3E|\\n|<br>/);
+			data = rawData.split(/%3Cbr%3E|\\n|%3Cbr%3E|<br>/);
 			
 			//clean out all other data except text
 			for (var i = data.length; i >= 0; i--) {
@@ -281,7 +281,7 @@
 		 */
 		var resizeToken = function(token,character) {
 			var charId = character.get('_id');
-			var unitSize = 1;
+			var unitSize = 1.0;
 			var pageScale = getObj('page',token.get('_pageid')).get('snapping_increment');
 			var tsize = parseInt(unitPixels*(pageScale==0 ? 1:pageScale)); 
 			var size = findObjs({
@@ -297,6 +297,7 @@
 				case 'Diminutive': 
 				case 'Tiny': 
 					unitSize = 0.5;
+					break;
 				case 'Small':
 				case 'Medium':
 					  break; 
@@ -458,7 +459,9 @@
 						retval = 'Medium'; 
 						break; 
 				}
-			} else if (getLineByName('Fine',data,0,lineEndFnd) || getLineByName('fine',data,0,lineEndFnd)) {
+			} 
+			
+			if (getLineByName('Fine',data,0,lineEndFnd) || getLineByName('fine',data,0,lineEndFnd)) {
 				retval = 'Fine'; 
 			} else if (getLineByName('Diminutive',data,0,lineEndFnd) || getLineByName('diminutive',data,0,lineEndFnd)) {
 				retval = 'Diminutive'; 
@@ -1539,7 +1542,7 @@
 						bonusAtkStr += "{{crit_damage" + "=" + critDamage + "}}";
 						bonusAtkStr += (atkDamage.rider==="" ? '': atkDamage.rider);
 						
-						var bonusCodeName = label + "_AOO" + (volley ? ("&#40;"+volley+"&#41;") : '') + "_" + bonusAtkName;
+						var bonusCodeName = label + "_AOO" + (volley ? ("_"+volley) : '') + "_" + bonusAtkName;
 						var bonusAbName = label + "_AOO" + (volley ? '_'+volley : '') + "_" + bonusAtkName;
 						addAbility(bonusAbName,'',bonusAtkStr,false,charId);
 						abLabel += makeButton(bonusAtkName + (volley ? volley : ''), bonusAbName, bonusCodeName);
