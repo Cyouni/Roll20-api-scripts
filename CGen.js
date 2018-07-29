@@ -1196,14 +1196,22 @@
 					attrStr = makeRoll("CL Check", casterLevel);
 					addAbility(clAttrName,'',attrStr,false,charId);
 					concentration = getValueByName("concentration",line,termChars);
+					if (!concentration) {
+						addWarning('No concentration bonus found for \''
+							+ casterType + '\' ' + type + '. CHA bonus '
+							+ 'has been assumed.');	
+						var lineStartFnd = getLineNumberByName("STATISTICS",data);
+						var lineEndFnd = getLineNumberByName("SPECIAL ABILITIES",data);
+						var statLine = getLineByName("Str",data,lineStartFnd,lineEndFnd);
+						var cha = getValueByName("Cha", statLine, []);
+						cha = getBonusNumber(cha, bonusEnum.SCALAR);
+						var chaBonus = Math.floor((cha-10)/2);
+						var concentrationNum = getBonusNumber(casterLevel,bonusEnum.SCALAR) + getBonusNumber(chaBonus.toString(),bonusEnum.SCALAR);
+						concentration = concentrationNum.toString(); 
+					}
 					concentration = getBonusNumber(concentration,bonusEnum.SIGN);
 					conAttrName = casterType + "-CON";
 					addAttribute(conAttrName,concentration,concentration,charId);
-					if (!concentration) {
-						addWarning('No concentration bonus found for \''
-							+ casterType + '\' ' + type + '. A manual'
-							+ ' prompt has been substituted in place.');
-					}
 					attrStr = makeRoll("Concentration", (concentration ? concentration:'+?{concentration-bonus}'));
 					addAbility(conAttrName,'',attrStr,false,charId);
 					start++;
