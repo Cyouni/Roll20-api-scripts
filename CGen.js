@@ -112,7 +112,7 @@
 			creLog('RAW: ' + rawData);
 			if (!rawData) 
 				{throw "no token notes";}
-			data = rawData.split(/%3Cbr%3E|\\n|%3Cbr%3E|<br>/);
+			data = rawData.split(/%3Cbr%3E|\\n|%3C\/p%3E|<br>/);
 			
 			//clean out all other data except text
 			for (var i = data.length; i >= 0; i--) {
@@ -300,19 +300,20 @@
 					break;
 				case 'Small':
 				case 'Medium':
-					  break; 
+					unitSize = 1;
+					 break; 
 				case 'Large':
-					  unitSize = 2; 
-					  break; 
+					unitSize = 2; 
+					break; 
 				case 'Huge':
-					  unitSize = 3; 
-					  break; 
+					unitSize = 3; 
+					break; 
 				case 'Gargantuan': 
-					  unitSize = 4; 
-					  break; 
+					unitSize = 4; 
+					break; 
 				case 'Colossal':
-					  unitSize = 6; 
-					  break; 
+					unitSize = 6; 
+					break; 
 				default:
 					 creLog('resizeToken: Bad size \''+size+'\' '); 
 			}
@@ -2109,7 +2110,7 @@
 				{locStart = 0;}
 			if (!locEnd) 
 				{locEnd = aryLines.length;}
-			var retval;
+			var retval = -1;
 			
 			creLog("getLineNumberByName: " + strName + " " + locStart + " " + locEnd + " " + (!!aryLines),5);
 			for (var i = locStart; i < locEnd; ++i) {
@@ -2118,6 +2119,23 @@
 					break;
 				}
 			}
+			
+			// backup in case it's lowercase
+			if (retval === -1) {
+				var strUpper = strName.toLowerCase().capitalize(); 
+				creLog("getLineNumberByName: " + strUpper + " " + locStart + " " + locEnd + " " + (!!aryLines),5);
+				for (var i = locStart; i < locEnd; ++i) {
+					if (aryLines[i].indexOf(strUpper) !== -1) {
+						retval = i;
+						break;
+					}
+				}
+			}
+			
+			if (retval === -1) { // revert in case of error
+				var blank; 
+				return blank;
+			}	
 			return retval;
 		}; 
 		
